@@ -2,226 +2,190 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NGINX + Keepalived HA Architecture</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
+  html, body {
+    height: 100%;
+    overflow: hidden;
     background: #0d1117;
     font-family: 'Segoe UI', sans-serif;
     color: #e6edf3;
-    min-height: 100vh;
-    padding: 30px 20px;
   }
 
-  h1 {
-    text-align: center;
-    font-size: 1.6rem;
-    font-weight: 700;
+  .page {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    padding: 10px 16px 8px;
+    gap: 6px;
+  }
+
+  /* ── HEADER ── */
+  .header { text-align: center; }
+  .header h1 {
+    font-size: 1.1rem;
+    font-weight: 800;
     letter-spacing: 1px;
-    margin-bottom: 6px;
     background: linear-gradient(90deg, #58a6ff, #bc8cff, #ff7b72);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    margin-bottom: 2px;
   }
-
-  .subtitle {
-    text-align: center;
+  .header p {
+    font-size: 0.65rem;
     color: #8b949e;
-    font-size: 0.85rem;
-    margin-bottom: 36px;
     letter-spacing: 0.5px;
   }
 
-  /* ── INTERNET ── */
-  .internet {
+  /* ── MAIN DIAGRAM ── */
+  .diagram {
     display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 2px;
+    min-height: 0;
   }
+
+  /* INTERNET */
   .internet-box {
     background: linear-gradient(135deg, #1c2128, #2d333b);
     border: 1.5px solid #30363d;
-    border-radius: 12px;
-    padding: 12px 40px;
-    text-align: center;
-    font-size: 0.85rem;
+    border-radius: 8px;
+    padding: 5px 32px;
+    font-size: 0.72rem;
     color: #79c0ff;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 1px;
-    box-shadow: 0 0 20px rgba(88,166,255,0.15);
-  }
-  .internet-box span { font-size: 1.4rem; display: block; margin-bottom: 4px; }
-
-  /* ── ARROWS ── */
-  .arrow-down {
+    box-shadow: 0 0 14px rgba(88,166,255,0.12);
     display: flex;
-    justify-content: center;
-    margin: 4px 0;
+    align-items: center;
+    gap: 6px;
   }
-  .arrow-line {
+
+  /* ARROW */
+  .arrow {
     width: 2px;
-    height: 28px;
+    height: 14px;
     background: linear-gradient(to bottom, #58a6ff, #bc8cff);
     position: relative;
+    flex-shrink: 0;
   }
-  .arrow-line::after {
+  .arrow::after {
     content: '';
     position: absolute;
-    bottom: -6px;
-    left: -5px;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 8px solid #bc8cff;
+    bottom: -5px; left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #bc8cff;
   }
 
-  /* ── VIP CHIP ── */
-  .vip-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 6px 0;
-  }
+  /* VIP */
   .vip-chip {
     background: linear-gradient(135deg, #238636, #2ea043);
     border: 1.5px solid #3fb950;
-    border-radius: 20px;
-    padding: 6px 22px;
-    font-size: 0.78rem;
+    border-radius: 14px;
+    padding: 4px 18px;
+    font-size: 0.68rem;
     font-weight: 700;
     color: #fff;
     letter-spacing: 0.8px;
-    box-shadow: 0 0 14px rgba(46,160,67,0.45);
     animation: pulse-green 2s ease-in-out infinite;
   }
   @keyframes pulse-green {
-    0%,100% { box-shadow: 0 0 14px rgba(46,160,67,0.45); }
-    50%      { box-shadow: 0 0 26px rgba(46,160,67,0.75); }
+    0%,100% { box-shadow: 0 0 10px rgba(46,160,67,0.4); }
+    50%      { box-shadow: 0 0 22px rgba(46,160,67,0.7); }
   }
 
-  /* ── ROUTER / SWITCH ── */
-  .infra-row {
-    display: flex;
-    justify-content: center;
-    margin: 4px 0;
-  }
-  .infra-box {
-    border-radius: 10px;
-    padding: 10px 30px;
-    text-align: center;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  .router {
+  /* ROUTER */
+  .router-box {
     background: linear-gradient(135deg, #1f2937, #374151);
     border: 1.5px solid #4b5563;
+    border-radius: 8px;
+    padding: 5px 24px;
+    font-size: 0.7rem;
+    font-weight: 600;
     color: #f9a825;
-    box-shadow: 0 0 12px rgba(249,168,37,0.2);
+    box-shadow: 0 0 10px rgba(249,168,37,0.15);
   }
-  .switch {
+
+  /* L2 SWITCH */
+  .switch-box {
     background: linear-gradient(135deg, #1a2035, #1e2d4a);
     border: 1.5px solid #3b82f6;
+    border-radius: 8px;
+    padding: 5px 28px;
+    font-size: 0.7rem;
+    font-weight: 600;
     color: #93c5fd;
-    box-shadow: 0 0 12px rgba(59,130,246,0.2);
-    padding: 10px 60px;
+    box-shadow: 0 0 10px rgba(59,130,246,0.15);
   }
 
-  /* ── SPLIT LINE ── */
-  .split-row {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    margin: 4px 0;
-    gap: 0;
-  }
-  .split-line {
-    width: 2px;
-    height: 24px;
-    background: #3b82f6;
-  }
-  .h-line {
-    height: 2px;
-    background: linear-gradient(to right, #3b82f6 0%, #3b82f6 50%, #a855f7 50%, #a855f7 100%);
-    align-self: center;
-  }
-
-  /* ── DATACENTERS ── */
+  /* ── DC ROW ── */
   .dc-row {
     display: flex;
+    gap: 10px;
     justify-content: center;
-    gap: 16px;
-    margin: 8px 0;
-    flex-wrap: wrap;
+    width: 100%;
+    max-width: 820px;
   }
 
   .dc {
-    border-radius: 18px;
-    padding: 20px;
-    width: 400px;
-    position: relative;
+    flex: 1;
+    border-radius: 12px;
+    padding: 8px 10px 6px;
+    max-width: 390px;
   }
-
   .dc1 {
     background: linear-gradient(145deg, #0d1f3c, #0f2847);
     border: 2px solid #1d4ed8;
-    box-shadow: 0 0 30px rgba(29,78,216,0.25), inset 0 1px 0 rgba(59,130,246,0.1);
+    box-shadow: 0 0 20px rgba(29,78,216,0.2);
   }
-
   .dc2 {
     background: linear-gradient(145deg, #1a0d3c, #220f47);
     border: 2px solid #7c3aed;
-    box-shadow: 0 0 30px rgba(124,58,237,0.25), inset 0 1px 0 rgba(167,139,250,0.1);
+    box-shadow: 0 0 20px rgba(124,58,237,0.2);
   }
 
   .dc-label {
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
-    margin-bottom: 16px;
-    padding: 5px 0;
-    border-radius: 6px;
+    padding: 3px 0;
+    border-radius: 5px;
+    margin-bottom: 6px;
   }
-  .dc1 .dc-label {
-    color: #60a5fa;
-    background: rgba(29,78,216,0.2);
-    border: 1px solid rgba(29,78,216,0.4);
-  }
-  .dc2 .dc-label {
-    color: #c084fc;
-    background: rgba(124,58,237,0.2);
-    border: 1px solid rgba(124,58,237,0.4);
-  }
+  .dc1 .dc-label { color: #60a5fa; background: rgba(29,78,216,0.2); border: 1px solid rgba(29,78,216,0.35); }
+  .dc2 .dc-label { color: #c084fc; background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.35); }
 
-  .dc-switch-label {
+  .dc-switch {
     text-align: center;
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     color: #6b7280;
-    margin-bottom: 12px;
-    letter-spacing: 0.5px;
+    margin-bottom: 6px;
   }
 
-  /* ── VM GRID ── */
-  .vm-grid {
-    display: flex;
-    gap: 12px;
-  }
+  /* VM GRID */
+  .vm-grid { display: flex; gap: 8px; }
 
   .vm-card {
     flex: 1;
-    border-radius: 12px;
-    padding: 14px 10px;
+    border-radius: 8px;
+    padding: 8px 6px;
     text-align: center;
-    position: relative;
     transition: transform 0.2s;
   }
-  .vm-card:hover { transform: translateY(-3px); }
+  .vm-card:hover { transform: translateY(-2px); }
 
   .vm-master {
     background: linear-gradient(145deg, #052e16, #14532d);
     border: 2px solid #16a34a;
-    box-shadow: 0 0 18px rgba(22,163,74,0.4);
+    box-shadow: 0 0 12px rgba(22,163,74,0.35);
   }
   .vm-backup {
     background: linear-gradient(145deg, #1c1917, #292524);
@@ -229,75 +193,80 @@
   }
 
   .vm-name {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   .vm-master .vm-name { color: #4ade80; }
   .vm-backup .vm-name { color: #d1d5db; }
 
   .vm-badge {
     display: inline-block;
-    font-size: 0.62rem;
+    font-size: 0.55rem;
     font-weight: 700;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-bottom: 8px;
+    letter-spacing: 0.8px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-bottom: 3px;
   }
-  .badge-master { background: #16a34a; color: #fff; }
+  .badge-master  { background: #16a34a; color: #fff; }
   .badge-backup1 { background: #1d4ed8; color: #fff; }
   .badge-backup2 { background: #7c3aed; color: #fff; }
   .badge-backup3 { background: #9f1239; color: #fff; }
 
   .vm-priority {
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     color: #9ca3af;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   .vm-priority strong { color: #fbbf24; }
 
+  .vm-services {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+  }
   .vm-service {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     background: rgba(255,255,255,0.06);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 0.68rem;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.58rem;
     color: #e2e8f0;
     font-weight: 600;
   }
   .dot {
-    width: 6px; height: 6px;
+    width: 5px; height: 5px;
     border-radius: 50%;
     background: #22c55e;
     animation: blink 1.4s ease-in-out infinite;
+    flex-shrink: 0;
   }
   @keyframes blink {
     0%,100% { opacity: 1; }
     50%      { opacity: 0.2; }
   }
 
-  /* ── VRRP HEARTBEAT BAR ── */
+  /* VRRP BAR */
   .vrrp-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 14px 0 4px;
-    font-size: 0.68rem;
+    gap: 6px;
+    margin-top: 5px;
+    font-size: 0.58rem;
     color: #f59e0b;
     font-weight: 600;
-    letter-spacing: 0.5px;
   }
   .vrrp-line {
     flex: 1;
-    height: 2px;
+    height: 1.5px;
     background: linear-gradient(to right, transparent, #f59e0b, transparent);
-    border-radius: 2px;
     position: relative;
     overflow: hidden;
+    border-radius: 2px;
   }
   .vrrp-line::after {
     content: '';
@@ -307,80 +276,70 @@
     background: linear-gradient(to right, transparent, #fff, transparent);
     animation: sweep 2s linear infinite;
   }
-  @keyframes sweep {
-    to { left: 140%; }
-  }
+  @keyframes sweep { to { left: 140%; } }
 
-  /* ── DARK FIBRE ── */
-  .fibre-section {
-    display: flex;
-    justify-content: center;
-    margin: 18px 0;
-    position: relative;
-  }
+  /* DARK FIBRE */
   .fibre-box {
     background: linear-gradient(135deg, #1a0a00, #2d1600);
     border: 2px solid #f97316;
-    border-radius: 14px;
-    padding: 14px 40px;
+    border-radius: 10px;
+    padding: 6px 24px;
     text-align: center;
-    position: relative;
-    box-shadow: 0 0 30px rgba(249,115,22,0.3), 0 0 60px rgba(249,115,22,0.1);
     animation: fibre-glow 3s ease-in-out infinite;
+    width: 100%;
+    max-width: 820px;
   }
   @keyframes fibre-glow {
-    0%,100% { box-shadow: 0 0 30px rgba(249,115,22,0.3), 0 0 60px rgba(249,115,22,0.1); }
-    50%      { box-shadow: 0 0 50px rgba(249,115,22,0.5), 0 0 90px rgba(249,115,22,0.2); }
+    0%,100% { box-shadow: 0 0 20px rgba(249,115,22,0.25); }
+    50%      { box-shadow: 0 0 36px rgba(249,115,22,0.5); }
   }
   .fibre-title {
-    font-size: 0.8rem;
+    font-size: 0.65rem;
     font-weight: 800;
     color: #fb923c;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
   .fibre-tags {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
     flex-wrap: wrap;
   }
   .fibre-tag {
-    background: rgba(249,115,22,0.15);
-    border: 1px solid rgba(249,115,22,0.35);
-    border-radius: 8px;
-    padding: 3px 10px;
-    font-size: 0.66rem;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.58rem;
     color: #fdba74;
     font-weight: 600;
   }
 
-  /* ── FAILOVER TABLE ── */
+  /* ── INFO CARDS ── */
   .info-section {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 28px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
   }
 
   .info-card {
     background: linear-gradient(145deg, #161b22, #1c2128);
     border: 1.5px solid #30363d;
-    border-radius: 14px;
-    padding: 18px 20px;
-    min-width: 260px;
-    max-width: 340px;
-    flex: 1;
+    border-radius: 10px;
+    padding: 8px 10px;
   }
   .info-card h3 {
-    font-size: 0.78rem;
+    font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
     border-bottom: 1px solid #30363d;
   }
   .info-card.blue h3   { color: #58a6ff; border-color: rgba(88,166,255,0.3); }
@@ -390,278 +349,208 @@
   .failover-row {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 0.75rem;
+    gap: 6px;
+    margin-bottom: 5px;
+    font-size: 0.62rem;
   }
   .scenario-num {
-    width: 20px; height: 20px;
+    width: 16px; height: 16px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.65rem; font-weight: 800;
+    font-size: 0.55rem; font-weight: 800;
     flex-shrink: 0;
-    margin-top: 1px;
   }
   .s1 { background: #16a34a; color: #fff; }
   .s2 { background: #1d4ed8; color: #fff; }
   .s3 { background: #7c3aed; color: #fff; }
   .s4 { background: #b91c1c; color: #fff; }
 
-  .scenario-text { color: #c9d1d9; line-height: 1.5; }
+  .scenario-text { color: #c9d1d9; line-height: 1.4; }
   .scenario-text strong { color: #e6edf3; }
-  .scenario-text .rto { color: #4ade80; font-size: 0.68rem; font-weight: 700; }
+  .rto { color: #4ade80; font-weight: 700; }
 
   .attr-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 0;
+    padding: 3px 0;
     border-bottom: 1px solid #21262d;
-    font-size: 0.75rem;
+    font-size: 0.62rem;
   }
   .attr-row:last-child { border-bottom: none; }
   .attr-key { color: #8b949e; }
   .attr-val { color: #e6edf3; font-weight: 600; text-align: right; }
-  .attr-val.green { color: #4ade80; }
+  .attr-val.green  { color: #4ade80; }
   .attr-val.yellow { color: #fbbf24; }
-  .attr-val.blue { color: #60a5fa; }
+  .attr-val.blue   { color: #60a5fa; }
   .attr-val.orange { color: #fb923c; }
 
   /* ── FOOTER ── */
   footer {
     text-align: center;
-    margin-top: 30px;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     color: #484f58;
     letter-spacing: 0.5px;
+    padding-top: 2px;
   }
 </style>
 </head>
 <body>
+<div class="page">
 
-<h1>NGINX + Keepalived — High Availability Architecture</h1>
-<p class="subtitle">Two Datacenters &nbsp;·&nbsp; Dark Fibre L2 Stretch &nbsp;·&nbsp; Single VRRP Group &nbsp;·&nbsp; Floating Virtual IP</p>
-
-<!-- INTERNET -->
-<div class="internet">
-  <div class="internet-box">
-    <span>🌐</span>CLIENTS / INTERNET
-  </div>
-</div>
-
-<div class="arrow-down"><div class="arrow-line"></div></div>
-
-<!-- VIP CHIP -->
-<div class="vip-wrapper">
-  <div class="vip-chip">⚡ Virtual IP (Floating)</div>
-</div>
-
-<div class="arrow-down"><div class="arrow-line"></div></div>
-
-<!-- ROUTER -->
-<div class="infra-row">
-  <div class="infra-box router">🔀 &nbsp;Layer 3 Router / Firewall</div>
-</div>
-
-<div class="arrow-down"><div class="arrow-line"></div></div>
-
-<!-- L2 SWITCH -->
-<div class="infra-row">
-  <div class="infra-box switch">🔗 &nbsp;Layer 2 Switch Fabric &nbsp;—&nbsp; Same Broadcast Domain / VLAN</div>
-</div>
-
-<div class="arrow-down"><div class="arrow-line"></div></div>
-
-<!-- DATACENTERS -->
-<div class="dc-row">
-
-  <!-- DC1 -->
-  <div class="dc dc1">
-    <div class="dc-label">🏢 &nbsp;Datacenter 1</div>
-    <div class="dc-switch-label">DC1 L2 Switch</div>
-    <div class="vm-grid">
-      <div class="vm-card vm-master">
-        <div class="vm-name">VM 1</div>
-        <div><span class="vm-badge badge-master">MASTER</span></div>
-        <div class="vm-priority">Priority: <strong>200</strong></div>
-        <div class="vm-service"><span class="dot"></span> NGINX</div>
-        <div class="vm-service" style="margin-top:5px"><span class="dot" style="background:#38bdf8"></span> Keepalived</div>
-      </div>
-      <div class="vm-card vm-backup">
-        <div class="vm-name">VM 2</div>
-        <div><span class="vm-badge badge-backup1">BACKUP 1</span></div>
-        <div class="vm-priority">Priority: <strong>150</strong></div>
-        <div class="vm-service"><span class="dot" style="animation-delay:0.3s"></span> NGINX</div>
-        <div class="vm-service" style="margin-top:5px"><span class="dot" style="background:#38bdf8;animation-delay:0.3s"></span> Keepalived</div>
-      </div>
-    </div>
-    <div class="vrrp-bar">
-      <div class="vrrp-line"></div>
-      ⚡ VRRP Heartbeat
-      <div class="vrrp-line"></div>
-    </div>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>NGINX + Keepalived — High Availability Architecture</h1>
+    <p>Two Datacenters &nbsp;·&nbsp; Dark Fibre L2 Stretch &nbsp;·&nbsp; Single VRRP Group &nbsp;·&nbsp; Floating Virtual IP</p>
   </div>
 
-  <!-- DC2 -->
-  <div class="dc dc2">
-    <div class="dc-label">🏢 &nbsp;Datacenter 2</div>
-    <div class="dc-switch-label">DC2 L2 Switch</div>
-    <div class="vm-grid">
-      <div class="vm-card vm-backup">
-        <div class="vm-name">VM 3</div>
-        <div><span class="vm-badge badge-backup2">BACKUP 2</span></div>
-        <div class="vm-priority">Priority: <strong>100</strong></div>
-        <div class="vm-service"><span class="dot" style="animation-delay:0.6s"></span> NGINX</div>
-        <div class="vm-service" style="margin-top:5px"><span class="dot" style="background:#38bdf8;animation-delay:0.6s"></span> Keepalived</div>
+  <!-- DIAGRAM -->
+  <div class="diagram">
+
+    <div class="internet-box">🌐 &nbsp;CLIENTS / INTERNET</div>
+    <div class="arrow"></div>
+
+    <div class="vip-chip">⚡ Virtual IP (Floating)</div>
+    <div class="arrow"></div>
+
+    <div class="router-box">🔀 &nbsp;Layer 3 Router / Firewall</div>
+    <div class="arrow"></div>
+
+    <div class="switch-box">🔗 &nbsp;Layer 2 Switch Fabric — Same Broadcast Domain / VLAN</div>
+    <div class="arrow"></div>
+
+    <!-- DATACENTERS -->
+    <div class="dc-row">
+
+      <!-- DC1 -->
+      <div class="dc dc1">
+        <div class="dc-label">🏢 &nbsp;Datacenter 1</div>
+        <div class="dc-switch">DC1 L2 Switch</div>
+        <div class="vm-grid">
+          <div class="vm-card vm-master">
+            <div class="vm-name">VM 1</div>
+            <div><span class="vm-badge badge-master">MASTER</span></div>
+            <div class="vm-priority">Priority: <strong>200</strong></div>
+            <div class="vm-services">
+              <div class="vm-service"><span class="dot"></span> NGINX</div>
+              <div class="vm-service"><span class="dot" style="background:#38bdf8"></span> Keepalived</div>
+            </div>
+          </div>
+          <div class="vm-card vm-backup">
+            <div class="vm-name">VM 2</div>
+            <div><span class="vm-badge badge-backup1">BACKUP 1</span></div>
+            <div class="vm-priority">Priority: <strong>150</strong></div>
+            <div class="vm-services">
+              <div class="vm-service"><span class="dot" style="animation-delay:0.3s"></span> NGINX</div>
+              <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.3s"></span> Keepalived</div>
+            </div>
+          </div>
+        </div>
+        <div class="vrrp-bar">
+          <div class="vrrp-line"></div>⚡ VRRP Heartbeat<div class="vrrp-line"></div>
+        </div>
       </div>
-      <div class="vm-card vm-backup">
-        <div class="vm-name">VM 4</div>
-        <div><span class="vm-badge badge-backup3">BACKUP 3</span></div>
-        <div class="vm-priority">Priority: <strong>50</strong></div>
-        <div class="vm-service"><span class="dot" style="animation-delay:0.9s"></span> NGINX</div>
-        <div class="vm-service" style="margin-top:5px"><span class="dot" style="background:#38bdf8;animation-delay:0.9s"></span> Keepalived</div>
+
+      <!-- DC2 -->
+      <div class="dc dc2">
+        <div class="dc-label">🏢 &nbsp;Datacenter 2</div>
+        <div class="dc-switch">DC2 L2 Switch</div>
+        <div class="vm-grid">
+          <div class="vm-card vm-backup">
+            <div class="vm-name">VM 3</div>
+            <div><span class="vm-badge badge-backup2">BACKUP 2</span></div>
+            <div class="vm-priority">Priority: <strong>100</strong></div>
+            <div class="vm-services">
+              <div class="vm-service"><span class="dot" style="animation-delay:0.6s"></span> NGINX</div>
+              <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.6s"></span> Keepalived</div>
+            </div>
+          </div>
+          <div class="vm-card vm-backup">
+            <div class="vm-name">VM 4</div>
+            <div><span class="vm-badge badge-backup3">BACKUP 3</span></div>
+            <div class="vm-priority">Priority: <strong>50</strong></div>
+            <div class="vm-services">
+              <div class="vm-service"><span class="dot" style="animation-delay:0.9s"></span> NGINX</div>
+              <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.9s"></span> Keepalived</div>
+            </div>
+          </div>
+        </div>
+        <div class="vrrp-bar">
+          <div class="vrrp-line"></div>⚡ VRRP Heartbeat<div class="vrrp-line"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DARK FIBRE -->
+    <div class="fibre-box">
+      <div class="fibre-title">🔆 Dark Fibre Interconnect</div>
+      <div class="fibre-tags">
+        <span class="fibre-tag">Private Dedicated Link</span>
+        <span class="fibre-tag">Stretched L2 / Same Subnet</span>
+        <span class="fibre-tag">Sub-millisecond Latency</span>
+        <span class="fibre-tag">VRRP Multicast Traverses Freely</span>
+        <span class="fibre-tag">No GSLB Required</span>
       </div>
     </div>
-    <div class="vrrp-bar">
-      <div class="vrrp-line"></div>
-      ⚡ VRRP Heartbeat
-      <div class="vrrp-line"></div>
+
+    <!-- INFO CARDS -->
+    <div class="info-section">
+
+      <!-- Failover -->
+      <div class="info-card blue">
+        <h3>⚡ Failover Cascade</h3>
+        <div class="failover-row">
+          <div class="scenario-num s1">1</div>
+          <div class="scenario-text"><strong>VM1 fails</strong> → VM2 claims VIP (DC1) <span class="rto">~1–2s</span></div>
+        </div>
+        <div class="failover-row">
+          <div class="scenario-num s2">2</div>
+          <div class="scenario-text"><strong>VM1+VM2 fail</strong> → VM3 claims VIP (DC2) <span class="rto">~2–3s</span></div>
+        </div>
+        <div class="failover-row">
+          <div class="scenario-num s3">3</div>
+          <div class="scenario-text"><strong>DC1 dark</strong> → VM3 MASTER, VM4 BACKUP <span class="rto">~3s</span></div>
+        </div>
+        <div class="failover-row">
+          <div class="scenario-num s4">4</div>
+          <div class="scenario-text"><strong>Fibre drops</strong> → Split-brain mitigated by nopreempt + priority gap</div>
+        </div>
+      </div>
+
+      <!-- Design -->
+      <div class="info-card green">
+        <h3>📐 Design Attributes</h3>
+        <div class="attr-row"><span class="attr-key">Network Type</span><span class="attr-val blue">Stretched L2</span></div>
+        <div class="attr-row"><span class="attr-key">Interconnect</span><span class="attr-val orange">Dark Fibre</span></div>
+        <div class="attr-row"><span class="attr-key">Virtual IP</span><span class="attr-val green">Single VIP — no GSLB</span></div>
+        <div class="attr-row"><span class="attr-key">VRRP Scope</span><span class="attr-val">All 4 nodes — 1 group</span></div>
+        <div class="attr-row"><span class="attr-key">DC1 Priority</span><span class="attr-val yellow">200 / 150 (preferred)</span></div>
+        <div class="attr-row"><span class="attr-key">DC2 Priority</span><span class="attr-val">100 / 50 (standby)</span></div>
+        <div class="attr-row"><span class="attr-key">RTO</span><span class="attr-val green">~1–3 seconds</span></div>
+        <div class="attr-row"><span class="attr-key">RPO</span><span class="attr-val green">Near-zero</span></div>
+      </div>
+
+      <!-- Stack -->
+      <div class="info-card orange">
+        <h3>🛠 Stack</h3>
+        <div class="attr-row"><span class="attr-key">Load Balancer</span><span class="attr-val blue">NGINX</span></div>
+        <div class="attr-row"><span class="attr-key">HA Daemon</span><span class="attr-val green">Keepalived</span></div>
+        <div class="attr-row"><span class="attr-key">Protocol</span><span class="attr-val yellow">VRRP (v2/v3)</span></div>
+        <div class="attr-row"><span class="attr-key">Auth</span><span class="attr-val">PASS (shared secret)</span></div>
+        <div class="attr-row"><span class="attr-key">Health Check</span><span class="attr-val">track_script (NGINX)</span></div>
+        <div class="attr-row"><span class="attr-key">Advert Interval</span><span class="attr-val green">1 second</span></div>
+        <div class="attr-row"><span class="attr-key">Nodes per DC</span><span class="attr-val">2</span></div>
+        <div class="attr-row"><span class="attr-key">Total Nodes</span><span class="attr-val">4</span></div>
+      </div>
+
     </div>
+
   </div>
+
+  <!-- FOOTER -->
+  <footer>nginx-keepalived &nbsp;·&nbsp; github.com/rajasekar21/nginx-keepalived &nbsp;·&nbsp; 2026</footer>
 
 </div>
-
-<!-- DARK FIBRE -->
-<div class="fibre-section">
-  <div class="fibre-box">
-    <div class="fibre-title">🔆 Dark Fibre Interconnect</div>
-    <div class="fibre-tags">
-      <span class="fibre-tag">Private Dedicated Link</span>
-      <span class="fibre-tag">Stretched L2 / Same Subnet</span>
-      <span class="fibre-tag">Sub-millisecond Latency</span>
-      <span class="fibre-tag">VRRP Multicast Traverses Freely</span>
-      <span class="fibre-tag">No GSLB Required</span>
-    </div>
-  </div>
-</div>
-
-<!-- INFO CARDS -->
-<div class="info-section">
-
-  <!-- Failover Scenarios -->
-  <div class="info-card blue">
-    <h3>⚡ Failover Cascade</h3>
-
-    <div class="failover-row">
-      <div class="scenario-num s1">1</div>
-      <div class="scenario-text">
-        <strong>VM1 fails</strong> → VM2 claims VIP (stays in DC1)
-        <span class="rto">&nbsp;~1–2s</span>
-      </div>
-    </div>
-
-    <div class="failover-row">
-      <div class="scenario-num s2">2</div>
-      <div class="scenario-text">
-        <strong>VM1 + VM2 fail</strong> → VM3 claims VIP (moves to DC2)
-        <span class="rto">&nbsp;~2–3s</span>
-      </div>
-    </div>
-
-    <div class="failover-row">
-      <div class="scenario-num s3">3</div>
-      <div class="scenario-text">
-        <strong>DC1 entirely dark</strong> → VM3 = MASTER, VM4 = BACKUP
-        <span class="rto">&nbsp;~3s</span>
-      </div>
-    </div>
-
-    <div class="failover-row">
-      <div class="scenario-num s4">4</div>
-      <div class="scenario-text">
-        <strong>Dark fibre drops</strong> → Split-brain risk. Mitigated by
-        <em>nopreempt</em> + priority gap + track scripts.
-      </div>
-    </div>
-  </div>
-
-  <!-- Design Attributes -->
-  <div class="info-card green">
-    <h3>📐 Design Attributes</h3>
-    <div class="attr-row">
-      <span class="attr-key">Network Type</span>
-      <span class="attr-val blue">Stretched L2</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Interconnect</span>
-      <span class="attr-val orange">Dark Fibre</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Virtual IP</span>
-      <span class="attr-val green">Single VIP — no GSLB</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">VRRP Scope</span>
-      <span class="attr-val">All 4 nodes — 1 group</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">DC1 Priority</span>
-      <span class="attr-val yellow">200 / 150 (preferred)</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">DC2 Priority</span>
-      <span class="attr-val">100 / 50 (standby)</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">RTO</span>
-      <span class="attr-val green">~1–3 seconds</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">RPO</span>
-      <span class="attr-val green">Near-zero</span>
-    </div>
-  </div>
-
-  <!-- Stack -->
-  <div class="info-card orange">
-    <h3>🛠 Stack</h3>
-    <div class="attr-row">
-      <span class="attr-key">Load Balancer</span>
-      <span class="attr-val blue">NGINX</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">HA Daemon</span>
-      <span class="attr-val green">Keepalived</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Protocol</span>
-      <span class="attr-val yellow">VRRP (v2/v3)</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Auth</span>
-      <span class="attr-val">PASS (shared secret)</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Health Check</span>
-      <span class="attr-val">track_script (NGINX)</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Advert Interval</span>
-      <span class="attr-val green">1 second</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Nodes per DC</span>
-      <span class="attr-val">2</span>
-    </div>
-    <div class="attr-row">
-      <span class="attr-key">Total Nodes</span>
-      <span class="attr-val">4</span>
-    </div>
-  </div>
-
-</div>
-
-<footer>nginx-keepalived &nbsp;·&nbsp; github.com/rajasekar21/nginx-keepalived &nbsp;·&nbsp; 2026</footer>
-
 </body>
 </html>
