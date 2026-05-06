@@ -6,7 +6,7 @@ A production-ready HA setup using **NGINX** as the load balancer / reverse proxy
 
 ## Architecture Overview
 
-> For the full interactive diagram open [`architecture.html`](architecture.html) in a browser.
+> 🔗 **[View Interactive Architecture Diagram](https://htmlpreview.github.io/?https://github.com/rajasekar21/nginx-keepalived/blob/main/architecture.html)**
 
 <div align="center" style="font-family:sans-serif;background:#0d1117;padding:28px;border-radius:14px;color:#e6edf3;">
 
