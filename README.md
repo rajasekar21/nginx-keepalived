@@ -165,6 +165,7 @@ Scenario 4 — Dark fibre link drops (split-brain):
 ```
 nginx-keepalived/
 ├── README.md
+├── CONFIGURATION.md
 ├── keepalived/
 │   ├── dc1-vm1-keepalived.conf      # MASTER config
 │   ├── dc1-vm2-keepalived.conf      # BACKUP 1 config
@@ -183,139 +184,55 @@ nginx-keepalived/
 
 ## Keepalived Configuration — DC1 VM1 (MASTER)
 
-```conf
-# /etc/keepalived/keepalived.conf — DC1 VM1
+Use `keepalived/dc1-vm1-keepalived.conf`.
 
-global_defs {
-    router_id DC1_VM1
-    enable_script_security
-}
+This node is the preferred MASTER with priority `200`.
 
-vrrp_script check_nginx {
-    script       "/etc/keepalived/scripts/check_nginx.sh"
-    interval     2
-    weight      -30
-    fall         2
-    rise         2
-}
+---
 
-vrrp_instance VI_1 {
-    state            MASTER
-    interface        eth0
-    virtual_router_id 51
-    priority         200
-    advert_int       1
-    nopreempt
+## Keepalived Configuration — DC1 VM2 (BACKUP 1)
 
-    authentication {
-        auth_type PASS
-        auth_pass S3cur3P@ss
-    }
+Use `keepalived/dc1-vm2-keepalived.conf`.
 
-    virtual_ipaddress {
-        <YOUR_VIP>/24 dev eth0
-    }
-
-    track_script {
-        check_nginx
-    }
-
-    notify /etc/keepalived/scripts/notify.sh
-}
-```
+This node is the first local DC1 failover target with priority `150`.
 
 ---
 
 ## Keepalived Configuration — DC2 VM3 (BACKUP 2)
 
-```conf
-# /etc/keepalived/keepalived.conf — DC2 VM3
+Use `keepalived/dc2-vm3-keepalived.conf`.
 
-global_defs {
-    router_id DC2_VM3
-    enable_script_security
-}
+This node is the first DC2 standby with priority `100`.
 
-vrrp_script check_nginx {
-    script       "/etc/keepalived/scripts/check_nginx.sh"
-    interval     2
-    weight      -30
-    fall         2
-    rise         2
-}
+---
 
-vrrp_instance VI_1 {
-    state            BACKUP
-    interface        eth0
-    virtual_router_id 51
-    priority         100
-    advert_int       1
-    nopreempt
+## Keepalived Configuration — DC2 VM4 (BACKUP 3)
 
-    authentication {
-        auth_type PASS
-        auth_pass S3cur3P@ss
-    }
+Use `keepalived/dc2-vm4-keepalived.conf`.
 
-    virtual_ipaddress {
-        <YOUR_VIP>/24 dev eth0
-    }
-
-    track_script {
-        check_nginx
-    }
-
-    notify /etc/keepalived/scripts/notify.sh
-}
-```
+This node is the final standby with priority `50`.
 
 ---
 
 ## NGINX Health Check Script
 
-```bash
-#!/bin/bash
-# /etc/keepalived/scripts/check_nginx.sh
+Use `scripts/check_nginx.sh`.
 
-if systemctl is-active --quiet nginx; then
-    exit 0
-else
-    exit 1
-fi
-```
+Keepalived calls this script every two seconds. If NGINX is not healthy, the node priority is reduced so another VM can take ownership of the VIP.
 
 ---
 
 ## NGINX Base Configuration
 
-```nginx
-# /etc/nginx/nginx.conf
+Use `nginx/nginx.conf` and `nginx/conf.d/default.conf`.
 
-user  nginx;
-worker_processes  auto;
+The default virtual host includes:
 
-error_log  /var/log/nginx/error.log warn;
-pid        /var/run/nginx.pid;
+- `/nginx-health` for local health checks
+- `backend_app` upstream placeholders for backend application servers
+- standard reverse proxy headers and upstream retry behavior
 
-events {
-    worker_connections 1024;
-}
-
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-
-    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
-                    '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent"';
-
-    access_log  /var/log/nginx/access.log  main;
-    sendfile        on;
-    keepalive_timeout 65;
-
-    include /etc/nginx/conf.d/*.conf;
-}
-```
+See `CONFIGURATION.md` for the placeholder list and deployment commands.
 
 ---
 
@@ -347,20 +264,25 @@ cd nginx-keepalived
 #    (adjust the filename to match the node's role)
 sudo cp keepalived/dc1-vm1-keepalived.conf /etc/keepalived/keepalived.conf
 
-# 3. Copy health check script
-sudo cp scripts/check_nginx.sh /etc/keepalived/scripts/
-sudo chmod +x /etc/keepalived/scripts/check_nginx.sh
+# 3. Copy Keepalived helper scripts
+sudo install -d -m 0755 /etc/keepalived/scripts
+sudo cp scripts/check_nginx.sh scripts/notify.sh /etc/keepalived/scripts/
+sudo chmod +x /etc/keepalived/scripts/check_nginx.sh /etc/keepalived/scripts/notify.sh
 
 # 4. Copy NGINX config
 sudo cp nginx/nginx.conf /etc/nginx/
 sudo cp nginx/conf.d/default.conf /etc/nginx/conf.d/
 
-# 5. Enable and start services
+# 5. Validate configs
+sudo nginx -t
+sudo keepalived -t -f /etc/keepalived/keepalived.conf
+
+# 6. Enable and start services
 sudo systemctl enable --now nginx
 sudo systemctl enable --now keepalived
 
-# 6. Verify VIP assignment on the MASTER node
-ip addr show eth0 | grep <YOUR_VIP>
+# 7. Verify VIP assignment on the MASTER node
+ip addr show CHANGE_ME_INTERFACE | grep CHANGE_ME_VIP
 ```
 
 ---
