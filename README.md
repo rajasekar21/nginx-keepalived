@@ -6,41 +6,108 @@ A production-ready HA setup using **NGINX** as the load balancer / reverse proxy
 
 ## Architecture Overview
 
-```
-                        CLIENTS / INTERNET
-                               │
-                               │  Single Virtual IP (VIP)
-                               │  (assign your VIP here)
-                               │
-               ┌───────────────▼───────────────┐
-               │       LAYER 3 ROUTER           │
-               └───────────────┬───────────────┘
-                               │
-               ┌───────────────▼───────────────┐
-               │     LAYER 2 SWITCH FABRIC      │
-               │  (Same Broadcast Domain/VLAN)  │
-               └──────┬────────────────┬────────┘
-                      │                │
-          ┌───────────▼───┐    ┌───────▼───────────┐
-          │  DC1 L2 Switch │    │  DC2 L2 Switch     │
-          └──┬─────────┬──┘    └──┬──────────────┬──┘
-             │         │          │              │
-       ┌─────▼───┐ ┌───▼─────┐ ┌─▼────────┐ ┌──▼───────┐
-       │  VM1    │ │  VM2    │ │  VM3     │ │  VM4     │
-       │ Pri:200 │ │ Pri:150 │ │ Pri:100  │ │  Pri:50  │
-       │ MASTER  │ │ BACKUP1 │ │ BACKUP2  │ │ BACKUP3  │
-       │  NGINX  │ │  NGINX  │ │  NGINX   │ │  NGINX   │
-       └─────────┘ └─────────┘ └──────────┘ └──────────┘
-             ▲           ▲            ▲              ▲
-             └───────────────VRRP─────────────────────┘
-                     Keepalived Heartbeat / Multicast
-                    (travels freely over dark fibre)
+> For the full interactive diagram open [`architecture.html`](architecture.html) in a browser.
 
-       ════════════════════════════════════════════════
-              DARK FIBRE  —  Private Dedicated Link
-              Stretched L2  │  Same Subnet  │  <1ms
-       ════════════════════════════════════════════════
-```
+<div align="center" style="font-family:sans-serif;background:#0d1117;padding:28px;border-radius:14px;color:#e6edf3;">
+
+<!-- INTERNET -->
+<div style="display:inline-block;background:#1c2128;border:1.5px solid #30363d;border-radius:10px;padding:10px 36px;color:#79c0ff;font-weight:700;letter-spacing:1px;font-size:0.9rem;">
+🌐 &nbsp;CLIENTS / INTERNET
+</div>
+
+<div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
+
+<!-- VIP -->
+<div style="display:inline-block;background:#14532d;border:1.5px solid #16a34a;border-radius:20px;padding:6px 24px;color:#4ade80;font-weight:700;font-size:0.82rem;letter-spacing:0.8px;">
+⚡ Virtual IP — Floating
+</div>
+
+<div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
+
+<!-- ROUTER -->
+<div style="display:inline-block;background:#1f2937;border:1.5px solid #4b5563;border-radius:10px;padding:8px 28px;color:#f9a825;font-weight:600;font-size:0.82rem;">
+🔀 Layer 3 Router / Firewall
+</div>
+
+<div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
+
+<!-- L2 SWITCH -->
+<div style="display:inline-block;background:#1a2035;border:1.5px solid #3b82f6;border-radius:10px;padding:8px 28px;color:#93c5fd;font-weight:600;font-size:0.82rem;">
+🔗 Layer 2 Switch Fabric — Same Broadcast Domain / VLAN
+</div>
+
+<div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
+
+<!-- DATACENTERS -->
+<table style="border-collapse:separate;border-spacing:16px;margin:0 auto;">
+<tr>
+
+<!-- DC1 -->
+<td style="background:#0d1f3c;border:2px solid #1d4ed8;border-radius:14px;padding:18px 16px;vertical-align:top;min-width:240px;">
+<div style="text-align:center;color:#60a5fa;font-weight:800;font-size:0.75rem;letter-spacing:2px;background:rgba(29,78,216,0.2);border:1px solid rgba(29,78,216,0.4);border-radius:6px;padding:5px;margin-bottom:14px;">
+🏢 &nbsp;DATACENTER 1
+</div>
+<div style="color:#6b7280;font-size:0.7rem;text-align:center;margin-bottom:10px;">DC1 L2 Switch</div>
+<table style="border-collapse:separate;border-spacing:8px;margin:0 auto;">
+<tr>
+<td style="background:#052e16;border:2px solid #16a34a;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#4ade80;font-weight:800;font-size:0.95rem;">VM 1</div>
+<div style="background:#16a34a;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">MASTER</div>
+<div style="color:#fbbf24;font-size:0.7rem;">Pri: 200</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+</td>
+<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 2</div>
+<div style="background:#1d4ed8;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 1</div>
+<div style="color:#fbbf24;font-size:0.7rem;">Pri: 150</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+</td>
+</tr>
+</table>
+<div style="text-align:center;color:#f59e0b;font-size:0.68rem;margin-top:10px;font-weight:600;">⚡ VRRP Heartbeat</div>
+</td>
+
+<!-- DC2 -->
+<td style="background:#1a0d3c;border:2px solid #7c3aed;border-radius:14px;padding:18px 16px;vertical-align:top;min-width:240px;">
+<div style="text-align:center;color:#c084fc;font-weight:800;font-size:0.75rem;letter-spacing:2px;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4);border-radius:6px;padding:5px;margin-bottom:14px;">
+🏢 &nbsp;DATACENTER 2
+</div>
+<div style="color:#6b7280;font-size:0.7rem;text-align:center;margin-bottom:10px;">DC2 L2 Switch</div>
+<table style="border-collapse:separate;border-spacing:8px;margin:0 auto;">
+<tr>
+<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 3</div>
+<div style="background:#7c3aed;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 2</div>
+<div style="color:#fbbf24;font-size:0.7rem;">Pri: 100</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+</td>
+<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 4</div>
+<div style="background:#9f1239;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 3</div>
+<div style="color:#fbbf24;font-size:0.7rem;">Pri: 50</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+</td>
+</tr>
+</table>
+<div style="text-align:center;color:#f59e0b;font-size:0.68rem;margin-top:10px;font-weight:600;">⚡ VRRP Heartbeat</div>
+</td>
+
+</tr>
+</table>
+
+<!-- DARK FIBRE -->
+<div style="display:inline-block;background:#1a0a00;border:2px solid #f97316;border-radius:14px;padding:12px 32px;margin-top:4px;">
+<div style="color:#fb923c;font-weight:800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">🔆 Dark Fibre Interconnect</div>
+<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Private Dedicated Link</span>
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Stretched L2 / Same Subnet</span>
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Sub-millisecond Latency</span>
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">VRRP Multicast Traverses Freely</span>
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">No GSLB Required</span>
+</div>
+</div>
+
+</div>
 
 ---
 
