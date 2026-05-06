@@ -10,7 +10,7 @@ A production-ready HA setup using **NGINX** as the load balancer / reverse proxy
                         CLIENTS / INTERNET
                                │
                                │  Single Virtual IP (VIP)
-                               │  e.g. 192.168.1.10
+                               │  (assign your VIP here)
                                │
                ┌───────────────▼───────────────┐
                │       LAYER 3 ROUTER           │
@@ -146,7 +146,7 @@ vrrp_instance VI_1 {
     }
 
     virtual_ipaddress {
-        192.168.1.10/24 dev eth0
+        <YOUR_VIP>/24 dev eth0
     }
 
     track_script {
@@ -191,7 +191,7 @@ vrrp_instance VI_1 {
     }
 
     virtual_ipaddress {
-        192.168.1.10/24 dev eth0
+        <YOUR_VIP>/24 dev eth0
     }
 
     track_script {
@@ -293,7 +293,7 @@ sudo systemctl enable --now nginx
 sudo systemctl enable --now keepalived
 
 # 6. Verify VIP assignment on the MASTER node
-ip addr show eth0 | grep 192.168.1.10
+ip addr show eth0 | grep <YOUR_VIP>
 ```
 
 ---
