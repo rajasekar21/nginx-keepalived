@@ -19,7 +19,7 @@ A production-ready HA setup using **NGINX** as the reverse proxy on all four nod
 
 <!-- VIP -->
 <div style="display:inline-block;background:#14532d;border:1.5px solid #16a34a;border-radius:20px;padding:6px 24px;color:#4ade80;font-weight:700;font-size:0.82rem;letter-spacing:0.8px;">
-⚡ Virtual IP — Floating
+⚡ Virtual IP — Single Entry Point
 </div>
 
 <div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
@@ -38,6 +38,14 @@ A production-ready HA setup using **NGINX** as the reverse proxy on all four nod
 
 <div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
 
+<!-- IPVS DIRECTOR -->
+<div style="display:inline-block;background:#1e1040;border:1.5px solid #a78bfa;border-radius:10px;padding:8px 28px;color:#c4b5fd;font-weight:700;font-size:0.82rem;">
+⚙ VRRP MASTER · IPVS Director — LVS Direct Routing
+</div>
+<div style="color:#8b949e;font-size:0.75rem;margin:2px 0 4px;">distributes connections to all 4 real servers via MAC rewrite — no NAT</div>
+
+<div style="color:#8b949e;font-size:1.4rem;line-height:1;">↓</div>
+
 <!-- DATACENTERS -->
 <table style="border-collapse:separate;border-spacing:16px;margin:0 auto;">
 <tr>
@@ -52,15 +60,16 @@ A production-ready HA setup using **NGINX** as the reverse proxy on all four nod
 <tr>
 <td style="background:#052e16;border:2px solid #16a34a;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
 <div style="color:#4ade80;font-weight:800;font-size:0.95rem;">VM 1</div>
-<div style="background:#16a34a;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">MASTER</div>
+<div style="background:#16a34a;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:2px 0;display:inline-block;letter-spacing:1px;">MASTER</div><br>
+<div style="background:#92400e;color:#fcd34d;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:2px 0;display:inline-block;letter-spacing:1px;">IPVS DIR</div>
 <div style="color:#fbbf24;font-size:0.7rem;">Pri: 200</div>
-<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● IPVS Director<br>● Keepalived<br>● lo: VIP</div>
 </td>
-<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
-<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 2</div>
+<td style="background:#0c1e2e;border:1.5px solid #0ea5e9;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#38bdf8;font-weight:800;font-size:0.95rem;">VM 2</div>
 <div style="background:#1d4ed8;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 1</div>
 <div style="color:#fbbf24;font-size:0.7rem;">Pri: 150</div>
-<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived<br>● lo: VIP</div>
 </td>
 </tr>
 </table>
@@ -75,17 +84,17 @@ A production-ready HA setup using **NGINX** as the reverse proxy on all four nod
 <div style="color:#6b7280;font-size:0.7rem;text-align:center;margin-bottom:10px;">DC2 L2 Switch</div>
 <table style="border-collapse:separate;border-spacing:8px;margin:0 auto;">
 <tr>
-<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
-<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 3</div>
+<td style="background:#0c1e2e;border:1.5px solid #0ea5e9;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#38bdf8;font-weight:800;font-size:0.95rem;">VM 3</div>
 <div style="background:#7c3aed;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 2</div>
 <div style="color:#fbbf24;font-size:0.7rem;">Pri: 100</div>
-<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived<br>● lo: VIP</div>
 </td>
-<td style="background:#1c1917;border:1.5px solid #44403c;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
-<div style="color:#d1d5db;font-weight:800;font-size:0.95rem;">VM 4</div>
+<td style="background:#0c1e2e;border:1.5px solid #0ea5e9;border-radius:10px;padding:12px 10px;text-align:center;min-width:100px;">
+<div style="color:#38bdf8;font-weight:800;font-size:0.95rem;">VM 4</div>
 <div style="background:#9f1239;color:#fff;border-radius:10px;font-size:0.62rem;font-weight:700;padding:2px 8px;margin:4px 0;display:inline-block;letter-spacing:1px;">BACKUP 3</div>
 <div style="color:#fbbf24;font-size:0.7rem;">Pri: 50</div>
-<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived</div>
+<div style="color:#a3a3a3;font-size:0.68rem;margin-top:4px;">● NGINX<br>● Keepalived<br>● lo: VIP</div>
 </td>
 </tr>
 </table>
@@ -95,14 +104,17 @@ A production-ready HA setup using **NGINX** as the reverse proxy on all four nod
 </tr>
 </table>
 
+<div style="color:#4ade80;font-size:0.75rem;margin-top:6px;font-weight:600;">↑ Direct return — real servers respond directly to clients, bypassing the IPVS Director</div>
+
 <!-- DARK FIBRE -->
-<div style="display:inline-block;background:#1a0a00;border:2px solid #f97316;border-radius:14px;padding:12px 32px;margin-top:4px;">
+<div style="display:inline-block;background:#1a0a00;border:2px solid #f97316;border-radius:14px;padding:12px 32px;margin-top:8px;">
 <div style="color:#fb923c;font-weight:800;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">🔆 Dark Fibre Interconnect</div>
 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
 <span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Private Dedicated Link</span>
 <span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Stretched L2 / Same Subnet</span>
 <span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">Sub-millisecond Latency</span>
 <span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">VRRP Multicast Traverses Freely</span>
+<span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">IPVS Direct Return Path</span>
 <span style="background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:3px 10px;font-size:0.68rem;color:#fdba74;font-weight:600;">No GSLB Required</span>
 </div>
 </div>
