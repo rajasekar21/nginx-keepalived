@@ -1,5 +1,15 @@
 # NGINX + Keepalived — High Availability Across Two Datacenters
 
+**Active-Active NGINX on All 4 Nodes — Single Floating VIP — LVS Direct Routing**
+
+![Platform](https://img.shields.io/badge/Platform-NGINX%20%2B%20Keepalived-009639?style=flat-square&logo=nginx&logoColor=white)
+![HA](https://img.shields.io/badge/HA-VRRP%20%C2%B7%20LVS--DR-dc2626?style=flat-square)
+![LB](https://img.shields.io/badge/LB-IPVS%20Least--Conn-7c3aed?style=flat-square)
+![Deployment](https://img.shields.io/badge/Deployment-Bare%20Metal-16a34a?style=flat-square)
+![OS](https://img.shields.io/badge/OS-Ubuntu%2022%2F24-e95420?style=flat-square&logo=ubuntu&logoColor=white)
+![Network](https://img.shields.io/badge/Network-Dark%20Fibre%20%C2%B7%20Stretched%20L2-f97316?style=flat-square)
+![Nodes](https://img.shields.io/badge/Active%20NGINX%20Nodes-4%20of%204-0ea5e9?style=flat-square)
+
 A production-ready HA setup using **NGINX** as the reverse proxy on all four nodes and **Keepalived** to manage both a floating Virtual IP (VRRP) and kernel-level load balancing (LVS Direct Routing / IPVS) across two geographically separate datacenters interconnected via **dark fibre** as a single stretched L2 domain. All four NGINX instances serve live traffic simultaneously — no idle standby nodes.
 
 ---
