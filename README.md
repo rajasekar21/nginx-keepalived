@@ -1,6 +1,6 @@
 # NGINX + Keepalived — High Availability Across Two Datacenters
 
-A production-ready HA setup using **NGINX** as the load balancer / reverse proxy and **Keepalived** (VRRP) to manage a floating Virtual IP across four nodes spread across two geographically separate datacenters, interconnected via **dark fibre** as a single stretched L2 domain.
+A production-ready HA setup using **NGINX** as the reverse proxy on all four nodes and **Keepalived** to manage both a floating Virtual IP (VRRP) and kernel-level load balancing (LVS Direct Routing / IPVS) across two geographically separate datacenters interconnected via **dark fibre** as a single stretched L2 domain. All four NGINX instances serve live traffic simultaneously — no idle standby nodes.
 
 ---
 
@@ -115,13 +115,16 @@ A production-ready HA setup using **NGINX** as the load balancer / reverse proxy
 
 | Attribute            | Detail                                              |
 |----------------------|-----------------------------------------------------|
-| **Network type**     | Stretched L2 — single subnet spans both DCs         |
-| **Interconnect**     | Dark fibre — private, dedicated, sub-millisecond    |
-| **Virtual IP**       | One floating VIP — no GSLB or DNS tricks needed     |
-| **VRRP scope**       | Single group across all 4 nodes                     |
-| **Failover order**   | VM1 → VM2 → VM3 → VM4 (descending priority)         |
-| **RTO**              | ~1–3 seconds                                        |
-| **RPO**              | Near-zero (shared L2 / synchronous replication)     |
+| **Network type**     | Stretched L2 — single subnet spans both DCs             |
+| **Interconnect**     | Dark fibre — private, dedicated, sub-millisecond        |
+| **Virtual IP**       | One floating VIP — no GSLB or DNS tricks needed         |
+| **VRRP scope**       | Single group across all 4 nodes                         |
+| **Load balancing**   | LVS Direct Routing (IPVS) — kernel-level, least-conn    |
+| **Active NGINX**     | All 4 nodes receive live traffic simultaneously         |
+| **Response path**    | Direct return — real servers reply to clients, not via director |
+| **Failover order**   | VM1 → VM2 → VM3 → VM4 (VRRP Director role shifts)      |
+| **RTO**              | ~1–3 seconds                                            |
+| **RPO**              | Near-zero (shared L2 / synchronous replication)         |
 
 ---
 
@@ -134,7 +137,7 @@ A production-ready HA setup using **NGINX** as the load balancer / reverse proxy
 | VM3  | DC2        | 100                 | BACKUP 2 |
 | VM4  | DC2        |  50                 | BACKUP 3 |
 
-DC1 nodes carry higher priority — DC2 acts as a warm standby, automatically promoted if DC1 loses both nodes.
+DC1 nodes carry higher priority for the VRRP Director role — DC2 is automatically promoted if DC1 loses both nodes. All four nodes act as active NGINX real servers under normal operation regardless of their VRRP role.
 
 ---
 
@@ -142,19 +145,26 @@ DC1 nodes carry higher priority — DC2 acts as a warm standby, automatically pr
 
 ```
 Scenario 1 — VM1 fails:
-  VM2 wins VRRP election → claims VIP        (stays in DC1)  ~1–2s
+  VM2 wins VRRP election → claims VIP + IPVS Director role  (stays in DC1)  ~1–2s
+  VM1 removed from IPVS pool by health check.  VM2, VM3, VM4 serve traffic.
 
 Scenario 2 — VM1 + VM2 fail:
-  VM3 wins VRRP election → claims VIP        (VIP moves to DC2) ~2–3s
+  VM3 wins VRRP election → claims VIP + Director           (moves to DC2)   ~2–3s
+  Only VM3 and VM4 serve traffic.
 
 Scenario 3 — DC1 entirely dark:
-  VM3 = MASTER, VM4 = BACKUP               (DC2 fully self-sufficient)
+  VM3 = IPVS Director + MASTER, VM4 = active real server + BACKUP
+  DC2 fully self-sufficient.
 
-Scenario 4 — Dark fibre link drops (split-brain):
+Scenario 4 — Single node NGINX unhealthy (any node):
+  Keepalived HTTP_GET health check fails → node weight set to 0 in IPVS pool.
+  Remaining nodes absorb traffic.  No VIP failover needed.
+
+Scenario 5 — Dark fibre link drops (split-brain):
   Both DCs may elect a MASTER simultaneously.
   Mitigated by:
     • nopreempt on DC2 nodes
-    • track_interface / track_script to demote on link loss
+    • track_script to demote on NGINX failure
     • Priority gap (100 point spread between DC1 and DC2)
 ```
 
@@ -176,8 +186,10 @@ nginx-keepalived/
 │   └── conf.d/
 │       └── default.conf             # Virtual host / upstream config
 └── scripts/
-    ├── check_nginx.sh               # Keepalived health check script
-    └── notify.sh                    # Failover notification handler
+    ├── check_nginx.sh               # Keepalived VRRP health check script
+    ├── notify.sh                    # Failover notification handler
+    ├── setup_lvs_loopback.sh        # Binds VIP on loopback, suppresses ARP
+    └── lvs-loopback.service         # Systemd unit — runs loopback setup at boot
 ```
 
 ---
@@ -266,23 +278,32 @@ sudo cp keepalived/dc1-vm1-keepalived.conf /etc/keepalived/keepalived.conf
 
 # 3. Copy Keepalived helper scripts
 sudo install -d -m 0755 /etc/keepalived/scripts
-sudo cp scripts/check_nginx.sh scripts/notify.sh /etc/keepalived/scripts/
-sudo chmod +x /etc/keepalived/scripts/check_nginx.sh /etc/keepalived/scripts/notify.sh
+sudo cp scripts/check_nginx.sh scripts/notify.sh \
+        scripts/setup_lvs_loopback.sh /etc/keepalived/scripts/
+sudo chmod +x /etc/keepalived/scripts/check_nginx.sh \
+              /etc/keepalived/scripts/notify.sh \
+              /etc/keepalived/scripts/setup_lvs_loopback.sh
 
-# 4. Copy NGINX config
+# 4. Install loopback VIP service (run on every node before nginx/keepalived)
+sudo cp scripts/lvs-loopback.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now lvs-loopback
+
+# 5. Copy NGINX config
 sudo cp nginx/nginx.conf /etc/nginx/
 sudo cp nginx/conf.d/default.conf /etc/nginx/conf.d/
 
-# 5. Validate configs
+# 6. Validate configs
 sudo nginx -t
 sudo keepalived -t -f /etc/keepalived/keepalived.conf
 
-# 6. Enable and start services
+# 7. Enable and start services
 sudo systemctl enable --now nginx
 sudo systemctl enable --now keepalived
 
-# 7. Verify VIP assignment on the MASTER node
+# 8. Verify VIP assignment and IPVS pool on the MASTER node
 ip addr show CHANGE_ME_INTERFACE | grep CHANGE_ME_VIP
+sudo ipvsadm -Ln
 ```
 
 ---
@@ -298,6 +319,12 @@ sudo systemctl status keepalived
 
 # View VRRP logs
 sudo journalctl -u keepalived -f
+
+# On the MASTER — view IPVS pool and connection counts
+sudo ipvsadm -Ln
+
+# Watch IPVS real-server weights update as nodes go up/down
+watch -n2 "sudo ipvsadm -Ln"
 ```
 
 ---

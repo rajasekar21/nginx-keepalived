@@ -156,6 +156,40 @@
     transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
   }
 
+  /* IPVS DIRECTOR */
+  .ipvs-box {
+    background: linear-gradient(135deg, #1e1040, #2a1660);
+    border: 1.5px solid #a78bfa;
+    border-radius: 8px;
+    padding: 5px 28px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    box-shadow: 0 0 12px rgba(167,139,250,0.2);
+    text-align: center;
+    animation: pulse-purple 3s ease-in-out infinite;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+  @keyframes pulse-purple {
+    0%,100% { box-shadow: 0 0 10px rgba(167,139,250,0.2); }
+    50%      { box-shadow: 0 0 22px rgba(167,139,250,0.45); }
+  }
+  .ipvs-note {
+    font-size: 0.58rem;
+    color: #7c3aed;
+    letter-spacing: 0.4px;
+    transition: color 0.3s ease;
+  }
+
+  /* DIRECT RETURN NOTE */
+  .return-note {
+    font-size: 0.6rem;
+    color: #4ade80;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: color 0.3s ease;
+  }
+
   /* ── DC ROW ── */
   .dc-row {
     display: flex;
@@ -226,6 +260,11 @@
     background: linear-gradient(145deg, #1c1917, #292524);
     border: 1.5px solid #44403c;
   }
+  .vm-active {
+    background: linear-gradient(145deg, #0c1e2e, #0f2a3d);
+    border: 1.5px solid #0ea5e9;
+    box-shadow: 0 0 8px rgba(14,165,233,0.2);
+  }
 
   .vm-name {
     font-size: 0.8rem;
@@ -234,7 +273,8 @@
     transition: color 0.3s ease;
   }
   .vm-master .vm-name { color: #4ade80; }
-  .vm-backup .vm-name { color: #d1d5db; }
+  .vm-backup .vm-name  { color: #d1d5db; }
+  .vm-active .vm-name  { color: #38bdf8; }
 
   .vm-badge {
     display: inline-block;
@@ -245,10 +285,11 @@
     border-radius: 8px;
     margin-bottom: 3px;
   }
-  .badge-master  { background: #16a34a; color: #fff; }
-  .badge-backup1 { background: #1d4ed8; color: #fff; }
-  .badge-backup2 { background: #7c3aed; color: #fff; }
-  .badge-backup3 { background: #9f1239; color: #fff; }
+  .badge-master    { background: #16a34a; color: #fff; }
+  .badge-backup1   { background: #1d4ed8; color: #fff; }
+  .badge-backup2   { background: #7c3aed; color: #fff; }
+  .badge-backup3   { background: #9f1239; color: #fff; }
+  .badge-director  { background: #92400e; color: #fcd34d; margin-left: 2px; }
 
   .vm-priority {
     font-size: 0.58rem;
@@ -430,6 +471,7 @@
   .attr-val.yellow { color: #fbbf24; }
   .attr-val.blue   { color: #60a5fa; }
   .attr-val.orange { color: #fb923c; }
+  .attr-val.purple { color: #c4b5fd; }
 
   /* ── FOOTER ── */
   footer {
@@ -483,6 +525,15 @@
     box-shadow: 0 0 10px rgba(59,130,246,0.12);
   }
 
+  body.light-mode .ipvs-box {
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    border-color: #7c3aed;
+    color: #5b21b6;
+    box-shadow: 0 0 10px rgba(124,58,237,0.1);
+  }
+  body.light-mode .ipvs-note  { color: #7c3aed; }
+  body.light-mode .return-note { color: #15803d; }
+
   body.light-mode .dc1 {
     background: linear-gradient(145deg, #eff6ff, #dbeafe);
     border-color: #3b82f6;
@@ -515,8 +566,14 @@
     background: linear-gradient(145deg, #f9fafb, #f3f4f6);
     border-color: #d1d5db;
   }
+  body.light-mode .vm-active {
+    background: linear-gradient(145deg, #f0f9ff, #e0f2fe);
+    border-color: #0ea5e9;
+    box-shadow: 0 0 8px rgba(14,165,233,0.15);
+  }
   body.light-mode .vm-master .vm-name { color: #15803d; }
-  body.light-mode .vm-backup .vm-name { color: #374151; }
+  body.light-mode .vm-backup .vm-name  { color: #374151; }
+  body.light-mode .vm-active .vm-name  { color: #0369a1; }
   body.light-mode .vm-priority { color: #6b7280; }
   body.light-mode .vm-priority strong { color: #d97706; }
   body.light-mode .vm-service {
@@ -580,7 +637,7 @@
   <!-- HEADER -->
   <div class="header">
     <h1>NGINX + Keepalived — High Availability Architecture</h1>
-    <p>Two Datacenters &nbsp;·&nbsp; Dark Fibre L2 Stretch &nbsp;·&nbsp; Single VRRP Group &nbsp;·&nbsp; Floating Virtual IP</p>
+    <p>Two Datacenters &nbsp;·&nbsp; Dark Fibre L2 Stretch &nbsp;·&nbsp; LVS-DR Active on All 4 Nodes &nbsp;·&nbsp; Single Floating VIP</p>
   </div>
 
   <!-- DIAGRAM -->
@@ -589,13 +646,17 @@
     <div class="internet-box">🌐 &nbsp;CLIENTS / INTERNET</div>
     <div class="arrow"></div>
 
-    <div class="vip-chip">⚡ Virtual IP (Floating)</div>
+    <div class="vip-chip">⚡ Virtual IP (Floating) — Single Entry Point</div>
     <div class="arrow"></div>
 
     <div class="router-box">🔀 &nbsp;Layer 3 Router / Firewall</div>
     <div class="arrow"></div>
 
     <div class="switch-box">🔗 &nbsp;Layer 2 Switch Fabric — Same Broadcast Domain / VLAN</div>
+    <div class="arrow"></div>
+
+    <div class="ipvs-box">⚙ &nbsp;VRRP MASTER &nbsp;·&nbsp; IPVS Director (LVS Direct Routing, lb_algo: least-conn)</div>
+    <div class="ipvs-note">distributes incoming connections to all 4 real servers via MAC rewrite — no NAT</div>
     <div class="arrow"></div>
 
     <!-- DATACENTERS -->
@@ -608,20 +669,26 @@
         <div class="vm-grid">
           <div class="vm-card vm-master">
             <div class="vm-name">VM 1</div>
-            <div><span class="vm-badge badge-master">MASTER</span></div>
+            <div>
+              <span class="vm-badge badge-master">MASTER</span>
+              <span class="vm-badge badge-director">IPVS DIR</span>
+            </div>
             <div class="vm-priority">Priority: <strong>200</strong></div>
             <div class="vm-services">
               <div class="vm-service"><span class="dot"></span> NGINX</div>
+              <div class="vm-service"><span class="dot" style="background:#a78bfa"></span> IPVS Director</div>
               <div class="vm-service"><span class="dot" style="background:#38bdf8"></span> Keepalived</div>
+              <div class="vm-service"><span class="dot" style="background:#fbbf24"></span> lo: VIP</div>
             </div>
           </div>
-          <div class="vm-card vm-backup">
+          <div class="vm-card vm-active">
             <div class="vm-name">VM 2</div>
             <div><span class="vm-badge badge-backup1">BACKUP 1</span></div>
             <div class="vm-priority">Priority: <strong>150</strong></div>
             <div class="vm-services">
               <div class="vm-service"><span class="dot" style="animation-delay:0.3s"></span> NGINX</div>
               <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.3s"></span> Keepalived</div>
+              <div class="vm-service"><span class="dot" style="background:#fbbf24;animation-delay:0.3s"></span> lo: VIP</div>
             </div>
           </div>
         </div>
@@ -635,22 +702,24 @@
         <div class="dc-label">🏢 &nbsp;Datacenter 2</div>
         <div class="dc-switch">DC2 L2 Switch</div>
         <div class="vm-grid">
-          <div class="vm-card vm-backup">
+          <div class="vm-card vm-active">
             <div class="vm-name">VM 3</div>
             <div><span class="vm-badge badge-backup2">BACKUP 2</span></div>
             <div class="vm-priority">Priority: <strong>100</strong></div>
             <div class="vm-services">
               <div class="vm-service"><span class="dot" style="animation-delay:0.6s"></span> NGINX</div>
               <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.6s"></span> Keepalived</div>
+              <div class="vm-service"><span class="dot" style="background:#fbbf24;animation-delay:0.6s"></span> lo: VIP</div>
             </div>
           </div>
-          <div class="vm-card vm-backup">
+          <div class="vm-card vm-active">
             <div class="vm-name">VM 4</div>
             <div><span class="vm-badge badge-backup3">BACKUP 3</span></div>
             <div class="vm-priority">Priority: <strong>50</strong></div>
             <div class="vm-services">
               <div class="vm-service"><span class="dot" style="animation-delay:0.9s"></span> NGINX</div>
               <div class="vm-service"><span class="dot" style="background:#38bdf8;animation-delay:0.9s"></span> Keepalived</div>
+              <div class="vm-service"><span class="dot" style="background:#fbbf24;animation-delay:0.9s"></span> lo: VIP</div>
             </div>
           </div>
         </div>
@@ -661,6 +730,8 @@
 
     </div>
 
+    <div class="return-note">↑ &nbsp;Direct return — each real server responds to the client directly, bypassing the IPVS Director</div>
+
     <!-- DARK FIBRE -->
     <div class="fibre-box">
       <div class="fibre-title">🔆 Dark Fibre Interconnect</div>
@@ -669,6 +740,7 @@
         <span class="fibre-tag">Stretched L2 / Same Subnet</span>
         <span class="fibre-tag">Sub-millisecond Latency</span>
         <span class="fibre-tag">VRRP Multicast Traverses Freely</span>
+        <span class="fibre-tag">IPVS Direct Return Path</span>
         <span class="fibre-tag">No GSLB Required</span>
       </div>
     </div>
@@ -681,19 +753,19 @@
         <h3>⚡ Failover Cascade</h3>
         <div class="failover-row">
           <div class="scenario-num s1">1</div>
-          <div class="scenario-text"><strong>VM1 fails</strong> → VM2 claims VIP (DC1) <span class="rto">~1–2s</span></div>
+          <div class="scenario-text"><strong>VM1 fails</strong> → VM2 claims VIP + IPVS Director role (DC1) <span class="rto">~1–2s</span></div>
         </div>
         <div class="failover-row">
           <div class="scenario-num s2">2</div>
-          <div class="scenario-text"><strong>VM1+VM2 fail</strong> → VM3 claims VIP (DC2) <span class="rto">~2–3s</span></div>
+          <div class="scenario-text"><strong>VM1+VM2 fail</strong> → VM3 claims VIP + Director (DC2) <span class="rto">~2–3s</span></div>
         </div>
         <div class="failover-row">
           <div class="scenario-num s3">3</div>
-          <div class="scenario-text"><strong>DC1 dark</strong> → VM3 MASTER, VM4 BACKUP <span class="rto">~3s</span></div>
+          <div class="scenario-text"><strong>DC1 dark</strong> → VM3 Director, VM4 BACKUP <span class="rto">~3s</span></div>
         </div>
         <div class="failover-row">
           <div class="scenario-num s4">4</div>
-          <div class="scenario-text"><strong>Fibre drops</strong> → Split-brain mitigated by nopreempt + priority gap</div>
+          <div class="scenario-text"><strong>Node unhealthy</strong> → Keepalived removes it from IPVS pool automatically</div>
         </div>
       </div>
 
@@ -703,24 +775,24 @@
         <div class="attr-row"><span class="attr-key">Network Type</span><span class="attr-val blue">Stretched L2</span></div>
         <div class="attr-row"><span class="attr-key">Interconnect</span><span class="attr-val orange">Dark Fibre</span></div>
         <div class="attr-row"><span class="attr-key">Virtual IP</span><span class="attr-val green">Single VIP — no GSLB</span></div>
-        <div class="attr-row"><span class="attr-key">VRRP Scope</span><span class="attr-val">All 4 nodes — 1 group</span></div>
+        <div class="attr-row"><span class="attr-key">Active NGINX Nodes</span><span class="attr-val green">4 of 4</span></div>
+        <div class="attr-row"><span class="attr-key">LB Mode</span><span class="attr-val purple">LVS Direct Routing</span></div>
         <div class="attr-row"><span class="attr-key">DC1 Priority</span><span class="attr-val yellow">200 / 150 (preferred)</span></div>
         <div class="attr-row"><span class="attr-key">DC2 Priority</span><span class="attr-val">100 / 50 (standby)</span></div>
         <div class="attr-row"><span class="attr-key">RTO</span><span class="attr-val green">~1–3 seconds</span></div>
-        <div class="attr-row"><span class="attr-key">RPO</span><span class="attr-val green">Near-zero</span></div>
       </div>
 
       <!-- Stack -->
       <div class="info-card orange">
         <h3>🛠 Stack</h3>
-        <div class="attr-row"><span class="attr-key">Load Balancer</span><span class="attr-val blue">NGINX</span></div>
+        <div class="attr-row"><span class="attr-key">Front-end LB</span><span class="attr-val purple">LVS-DR (IPVS)</span></div>
+        <div class="attr-row"><span class="attr-key">Real Server</span><span class="attr-val blue">NGINX × 4</span></div>
         <div class="attr-row"><span class="attr-key">HA Daemon</span><span class="attr-val green">Keepalived</span></div>
-        <div class="attr-row"><span class="attr-key">Protocol</span><span class="attr-val yellow">VRRP (v2/v3)</span></div>
-        <div class="attr-row"><span class="attr-key">Auth</span><span class="attr-val">PASS (shared secret)</span></div>
-        <div class="attr-row"><span class="attr-key">Health Check</span><span class="attr-val">track_script (NGINX)</span></div>
+        <div class="attr-row"><span class="attr-key">VRRP Protocol</span><span class="attr-val yellow">v2/v3 — 1 group</span></div>
+        <div class="attr-row"><span class="attr-key">LB Health Check</span><span class="attr-val">HTTP GET /nginx-health</span></div>
+        <div class="attr-row"><span class="attr-key">VRRP Health Check</span><span class="attr-val">track_script (NGINX)</span></div>
+        <div class="attr-row"><span class="attr-key">lo: VIP</span><span class="attr-val">All 4 nodes — ARP suppressed</span></div>
         <div class="attr-row"><span class="attr-key">Advert Interval</span><span class="attr-val green">1 second</span></div>
-        <div class="attr-row"><span class="attr-key">Nodes per DC</span><span class="attr-val">2</span></div>
-        <div class="attr-row"><span class="attr-key">Total Nodes</span><span class="attr-val">4</span></div>
       </div>
 
     </div>
