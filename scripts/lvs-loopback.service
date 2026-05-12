@@ -1,0 +1,12 @@
+[Unit]
+Description=LVS-DR loopback VIP and ARP suppression
+After=network.target
+Before=nginx.service keepalived.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/etc/keepalived/scripts/setup_lvs_loopback.sh
+
+[Install]
+WantedBy=multi-user.target
